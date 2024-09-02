@@ -3,6 +3,10 @@ node {
     checkout scm
   }
 
+  stage('Verify Source Files') {
+    sh 'ls -la src/main/java'
+  }
+
   stage('Clean Workspace') {
     try {
       sh '/usr/local/apache-maven/bin/mvn clean'
