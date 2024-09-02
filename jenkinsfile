@@ -5,7 +5,7 @@ node {
 
   stage('Build') {
     // Compile the Java code without the clean command
-    sh '/usr/local/apache-maven/bin/mvn compile'
+   // sh '/usr/local/apache-maven/bin/mvn compile'
   }
 
   stage('SonarQube Analysis') {
