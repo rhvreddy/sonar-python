@@ -33,6 +33,10 @@ node {
     }
   }
 
+  stage('Verify Build Output') {
+    sh 'ls -la target/classes'
+  }
+
   stage('SonarQube Analysis') {
     def scannerHome = '/home/harsha/Downloads/sonarqube/sonar-scanner-cli-6.1.0.4477-linux-x64/sonar-scanner-6.1.0.4477-linux-x64'
 
