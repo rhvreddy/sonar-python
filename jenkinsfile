@@ -4,8 +4,8 @@ node {
   }
 
   stage('Build') {
-    // Compile the Java code without the clean command
-   // sh '/usr/local/apache-maven/bin/mvn compile'
+    // Compile the Java code using the absolute path for Maven
+    sh '/usr/local/apache-maven/bin/mvn clean compile'
   }
 
   stage('SonarQube Analysis') {
@@ -14,7 +14,7 @@ node {
 
     withSonarQubeEnv() {
       // Run SonarQube analysis and specify the location of compiled classes
-      sh "${scannerHome}/bin/sonar-scanner -Dsonar.java.binaries=target/classes"
+      sh "${scannerHome}/bin/sonar-scanner -Dsonar.java.binaries=target/classes -Dsonar.sources=src"
     }
   }
 }
