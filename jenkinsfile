@@ -4,8 +4,8 @@ node {
   }
 
   stage('Build') {
-    // Compile the Java code using the absolute path for Maven
-    sh '/usr/local/apache-maven/bin/mvn clean compile'
+    // Compile the Java code without the clean command
+    sh '/usr/local/apache-maven/bin/mvn compile'
   }
 
   stage('SonarQube Analysis') {
