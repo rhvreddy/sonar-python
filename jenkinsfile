@@ -1,14 +1,12 @@
+
 node {
   stage('SCM') {
     checkout scm
   }
 
   stage('Build') {
-    // Change directory to where pom.xml is located
-    dir('/home/harsha/Downloads/sonarqube/sonar-python') {
-      // Compile the Java code
-      sh 'mvn clean compile'
-    }
+    // Compile the Java code
+    sh 'mvn clean compile'
   }
 
   stage('SonarQube Analysis') {
