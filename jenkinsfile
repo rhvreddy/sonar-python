@@ -4,8 +4,10 @@ node {
   }
 
   stage('Build') {
-    // Compile the Java code
-    sh 'mvn clean compile'
+    // Use the Maven tool configured in Jenkins
+    def mvnHome = tool name: 'Maven 3.x', type: 'maven'
+    // Compile the Java code using Maven
+    sh "${mvnHome}/bin/mvn clean compile"
   }
 
   stage('SonarQube Analysis') {
