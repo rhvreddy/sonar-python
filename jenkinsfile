@@ -8,16 +8,6 @@ node {
     sh 'mvn clean compile'
   }
 
-  stage('License Plugin Goals') {
-    // Display available goals for the license-maven-plugin
-    sh 'mvn license:help -Ddetail=true'
-  }
-
-  stage('Format License Headers') {
-    // Run the license:format goal to update missing headers
-    sh 'mvn license:format'
-  }
-
   stage('SonarQube Analysis') {
     // Set the absolute path for the SonarQube scanner
     def scannerHome = '/home/harsha/Downloads/sonarqube/sonar-scanner-cli-6.1.0.4477-linux-x64/sonar-scanner-6.1.0.4477-linux-x64';
