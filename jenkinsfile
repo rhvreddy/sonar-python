@@ -4,13 +4,13 @@ node {
   }
 
   stage('Build') {
-    // Compile the Java code
-    sh 'mvn clean compile'
+    // Compile the Java code using the absolute path for Maven
+    sh '/usr/local/apache-maven/bin/mvn clean compile'
   }
 
   stage('SonarQube Analysis') {
     // Set the absolute path for the SonarQube scanner
-    def scannerHome = '/home/harsha/Downloads/sonarqube/sonar-scanner-cli-6.1.0.4477-linux-x64/sonar-scanner-6.1.0.4477-linux-x64';
+    def scannerHome = '/home/harsha/Downloads/sonarqube/sonar-scanner-cli-6.1.0.4477-linux-x64/sonar-scanner-6.1.0.4477-linux-x64'
 
     withSonarQubeEnv() {
       // Run SonarQube analysis and specify the location of compiled classes
