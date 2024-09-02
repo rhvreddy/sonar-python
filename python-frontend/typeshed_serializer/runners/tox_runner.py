@@ -1,10 +1,9 @@
 import contextlib
 import os
 import sys
-from os.path import isfile, join
+# from os.path import isfile, join
 import subprocess
 import hashlib
-from pathlib import Path
 from typing import Optional, Tuple, Union
 from collections.abc import Callable
 import logging
@@ -25,7 +24,7 @@ logger.setLevel(logging.INFO)
 handler.setFormatter(log_formatter)
 logger.addHandler(handler)
 
-def fetch_python_file_names(folder_path: Path):
+def fetch_python_file_names(folder_path):
     return [str(file) for file in folder_path.glob('*.py')]
 
 def fetch_resource_file_names(folder_name: Path, file_extension: str) -> list[str]:
