@@ -37,7 +37,7 @@ node {
     def mvn = tool 'Default Maven'; // Use the Maven installation configured in Jenkins
     withSonarQubeEnv() {
       try {
-        sh "${mvn}/bin/mvn clean verify sonar:sonar -Dsonar.projectKey=harsha-2001_sonar-bitbucket_c287b260-d1b1-414e-bdbb-d31064fb23a7 -Dsonar.projectName='sonar-bitbucket' -Dsonar.login=sqa_bc8ebc2be98c29d3a60ff156f17e5884d8398da2"
+        sh "${mvn}/bin/mvn clean verify sonar:sonar -Dsonar.projectKey=rhvreddy_sonar-python_72748a6a-1544-4671-914e-79f2daa1598f -Dsonar.projectName='sonar-python' -Dsonar.login=sqa_bc8ebc2be98c29d3a60ff156f17e5884d8398da2"
       } catch (Exception e) {
         echo "SonarQube analysis failed: ${e.message}"
         currentBuild.result = 'FAILURE'
