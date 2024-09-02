@@ -3,18 +3,37 @@ node {
     checkout scm
   }
 
+  stage('Clean Workspace') {
+    try {
+      sh 'rm -rf /var/lib/jenkins/workspace/test-python/target/'
+    } catch (Exception e) {
+      echo "Failed to clean workspace: ${e.message}"
+      currentBuild.result = 'UNSTABLE'
+      throw e
+    }
+  }
+
   stage('Build') {
-    // Compile the Java code using the absolute path for Maven
-    // sh '/usr/local/apache-maven/bin/mvn clean compile'
+    try {
+      sh '/usr/local/apache-maven/bin/mvn clean compile'
+    } catch (Exception e) {
+      echo "Build failed: ${e.message}"
+      currentBuild.result = 'FAILURE'
+      throw e
+    }
   }
 
   stage('SonarQube Analysis') {
-    // Set the absolute path for the SonarQube scanner
     def scannerHome = '/home/harsha/Downloads/sonarqube/sonar-scanner-cli-6.1.0.4477-linux-x64/sonar-scanner-6.1.0.4477-linux-x64'
 
     withSonarQubeEnv() {
-      // Run SonarQube analysis and specify the location of compiled classes
-      sh "${scannerHome}/bin/sonar-scanner -Dsonar.java.binaries=target/classes"
+      try {
+        sh "${scannerHome}/bin/sonar-scanner -Dsonar.java.binaries=target/classes"
+      } catch (Exception e) {
+        echo "SonarQube analysis failed: ${e.message}"
+        currentBuild.result = 'FAILURE'
+        throw e
+      }
     }
   }
 }
