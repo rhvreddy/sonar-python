@@ -8,6 +8,11 @@ node {
     sh '/usr/local/apache-maven/bin/mvn clean compile'
   }
 
+  stage('Format License Headers') {
+    // Add license headers to all relevant files
+    sh '/usr/local/apache-maven/bin/mvn license:format'
+  }
+
   stage('SonarQube Analysis') {
     // Set the absolute path for the SonarQube scanner
     def scannerHome = '/home/harsha/Downloads/sonarqube/sonar-scanner-cli-6.1.0.4477-linux-x64/sonar-scanner-6.1.0.4477-linux-x64'
