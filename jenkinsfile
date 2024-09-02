@@ -1,20 +1,41 @@
-node {
-  stage('SCM') {
-    checkout scm
-  }
+pipeline {
+    agent any
 
-  stage('Build') {
-    // Compile the Java code
-    sh 'mvn clean compile'
-  }
-
-  stage('SonarQube Analysis') {
-    // Set the absolute path for the SonarQube scanner
-    def scannerHome = '/home/harsha/Downloads/sonarqube/sonar-scanner-cli-6.1.0.4477-linux-x64/sonar-scanner-6.1.0.4477-linux-x64';
-
-    withSonarQubeEnv() {
-      // Run SonarQube analysis and specify the location of compiled classes
-      sh "${scannerHome}/bin/sonar-scanner -Dsonar.java.binaries=target/classes"
+    environment {
+        // Path to the SonarQube scanner
+        SONAR_SCANNER_HOME = '/home/harsha/Downloads/sonarqube/sonar-scanner-cli-6.1.0.4477-linux-x64/sonar-scanner-6.1.0.4477-linux-x64'
+        PATH = "${SONAR_SCANNER_HOME}/bin:${env.PATH}"
     }
-  }
+
+    stages {
+        stage('SCM') {
+            steps {
+                // Checkout the source code from SCM
+                checkout scm
+            }
+        }
+
+        stage('Build') {
+            steps {
+                // Compile the Java code
+                sh 'mvn clean compile'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                // Run SonarQube analysis
+                withSonarQubeEnv('SonarQube') {
+                    sh "${SONAR_SCANNER_HOME}/bin/sonar-scanner -Dsonar.java.binaries=target/classes"
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            // Archive the results or perform cleanup actions
+            echo 'Pipeline completed.'
+        }
+    }
 }
