@@ -13,6 +13,16 @@ node {
     }
   }
 
+  stage('Format License Headers') {
+    try {
+      sh '/usr/local/apache-maven/bin/mvn license:format'
+    } catch (Exception e) {
+      echo "Failed to format license headers: ${e.message}"
+      currentBuild.result = 'UNSTABLE'
+      throw e
+    }
+  }
+
   stage('Build') {
     try {
       sh '/usr/local/apache-maven/bin/mvn clean compile'
