@@ -1,11 +1,10 @@
 import contextlib
 import os
 import sys
-# from os.path import isfile, join
 import subprocess
 import hashlib
-from typing import Optional, Tuple, Union
-from collections.abc import Callable
+from pathlib import Path
+from typing import Optional, List, Union, Callable, Tuple
 import logging
 import argparse
 
@@ -24,19 +23,19 @@ logger.setLevel(logging.INFO)
 handler.setFormatter(log_formatter)
 logger.addHandler(handler)
 
-def fetch_python_file_names(folder_path):
+def fetch_python_file_names(folder_path: Path) -> List[str]:
     return [str(file) for file in folder_path.glob('*.py')]
 
-def fetch_resource_file_names(folder_name: Path, file_extension: str) -> list[str]:
+def fetch_resource_file_names(folder_name: Path, file_extension: str) -> List[str]:
     return [str(file) for file in folder_name.rglob(f'*{file_extension}')]
 
-def fetch_config_file_names() -> list[str]:
+def fetch_config_file_names() -> List[str]:
     return ['requirements.txt', 'tox.ini']
 
-def fetch_binary_file_names() -> list[str]:
+def fetch_binary_file_names() -> List[str]:
     return sorted(fetch_resource_file_names(BINARY_FOLDER_PATH, PROTOBUF_EXTENSION))
 
-def fetch_source_file_names(folder_path: Path) -> list[str]:
+def fetch_source_file_names(folder_path: Path) -> List[str]:
     filenames = fetch_python_file_names(folder_path)
     resources = fetch_resource_file_names(RESOURCES_FOLDER_PATH, PYTHON_STUB_EXTENSION)
     config_files = fetch_config_file_names()
@@ -49,7 +48,7 @@ def normalize_text_files(file_name: str) -> bytes:
 def read_file(file_name: str) -> bytes:
     return Path(file_name).read_bytes()
 
-def compute_checksum(file_names: list[str], get_file_bytes: Callable[[str], bytes]) -> str:
+def compute_checksum(file_names: List[str], get_file_bytes: Callable[[str], bytes]) -> str:
     _hash = hashlib.sha256()
     for fn in file_names:
         with contextlib.suppress(IsADirectoryError):
@@ -72,7 +71,7 @@ def update_checksum():
         binary_checksum = compute_checksum(binary_file_names, read_file)
         file.write(f"{source_checksum}\n{binary_checksum}")
 
-def __log_process_begins(is_for_binary: bool, over_n_files: int, previous_checksum: Union[str, None], current_checksum: str) -> None:
+def __log_process_begins(is_for_binary: bool, over_n_files: int, previous_checksum: Optional[str], current_checksum: str) -> None:
     file_type = "BINARY" if is_for_binary else "SOURCE"
     binaries = "binaries " if is_for_binary else ""
     logger.info(f"STARTING TYPESHED {file_type} FILE CHECKSUM COMPUTATION")
