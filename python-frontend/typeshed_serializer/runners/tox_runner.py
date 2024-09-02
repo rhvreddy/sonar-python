@@ -3,16 +3,15 @@ import os
 import sys
 import subprocess
 import hashlib
-from pathlib import Path
-from typing import Optional, Callable, Tuple
 import logging
 import argparse
 
-CURRENT_PATH = Path(__file__).parent
-CHECKSUM_FILE = CURRENT_PATH / '../checksum'
-SERIALIZER_PATH = CURRENT_PATH / '../serializer'
-RESOURCES_FOLDER_PATH = CURRENT_PATH / '../resources'
-BINARY_FOLDER_PATH = CURRENT_PATH / '../../src/main/resources/org/sonar/python/types'
+# Define the path variables using os.path
+CURRENT_PATH = os.path.dirname(__file__)
+CHECKSUM_FILE = os.path.join(CURRENT_PATH, '../checksum')
+SERIALIZER_PATH = os.path.join(CURRENT_PATH, '../serializer')
+RESOURCES_FOLDER_PATH = os.path.join(CURRENT_PATH, '../resources')
+BINARY_FOLDER_PATH = os.path.join(CURRENT_PATH, '../../src/main/resources/org/sonar/python/types')
 PROTOBUF_EXTENSION = '.protobuf'
 PYTHON_STUB_EXTENSION = '.pyi'
 
@@ -24,11 +23,20 @@ handler.setFormatter(log_formatter)
 logger.addHandler(handler)
 
 def fetch_python_file_names(folder_path):
-    return [str(file) for file in folder_path.glob('*.py')]
+    python_files = []
+    for root, dirs, files in os.walk(folder_path):
+        for file in files:
+            if file.endswith('.py'):
+                python_files.append(os.path.join(root, file))
+    return python_files
 
 def fetch_resource_file_names(folder_name, file_extension):
-    pattern = '*{}'.format(file_extension)
-    return [str(file) for file in folder_name.rglob(pattern)]
+    matching_files = []
+    for root, dirs, files in os.walk(folder_name):
+        for file in files:
+            if file.endswith(file_extension):
+                matching_files.append(os.path.join(root, file))
+    return matching_files
 
 def fetch_config_file_names():
     return ['requirements.txt', 'tox.ini']
@@ -43,29 +51,31 @@ def fetch_source_file_names(folder_path):
     return sorted(filenames + resources + config_files)
 
 def normalize_text_files(file_name):
-    normalized_file = Path(file_name).read_text().strip().replace('\r\n', '\n').replace('\r', '\n')
-    return bytes(normalized_file, 'utf-8')
+    with open(file_name, 'r', encoding='utf-8') as file:
+        normalized_file = file.read().strip().replace('\r\n', '\n').replace('\r', '\n')
+    return normalized_file.encode('utf-8')
 
 def read_file(file_name):
-    return Path(file_name).read_bytes()
+    with open(file_name, 'rb') as file:
+        return file.read()
 
 def compute_checksum(file_names, get_file_bytes):
     _hash = hashlib.sha256()
     for fn in file_names:
-        with contextlib.suppress(IsADirectoryError):
+        with contextlib.suppress(OSError):
             _hash.update(get_file_bytes(fn))
     return _hash.hexdigest()
 
 def read_previous_checksum(checksum_file):
-    if not checksum_file.is_file():
+    if not os.path.isfile(checksum_file):
         return None, None
-    with checksum_file.open('r') as file:
+    with open(checksum_file, 'r') as file:
         source_checksum = file.readline().strip() or None
         binaries_checksum = file.readline().strip() or None
         return source_checksum, binaries_checksum
 
 def update_checksum():
-    with CHECKSUM_FILE.open('w') as file:
+    with open(CHECKSUM_FILE, 'w') as file:
         source_file_names = fetch_source_file_names(SERIALIZER_PATH)
         source_checksum = compute_checksum(source_file_names, normalize_text_files)
         binary_file_names = fetch_binary_file_names()
