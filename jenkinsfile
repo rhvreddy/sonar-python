@@ -12,8 +12,7 @@ node {
     // Set the absolute path for the SonarQube scanner
     def scannerHome = '/home/harsha/Downloads/sonarqube/sonar-scanner-cli-6.1.0.4477-linux-x64/sonar-scanner-6.1.0.4477-linux-x64';
 
-    // Use SonarQube environment variables
-    withSonarQubeEnv('SonarQube') {
+    withSonarQubeEnv() {
       // Run SonarQube analysis and specify the location of compiled classes
       sh "${scannerHome}/bin/sonar-scanner -Dsonar.java.binaries=target/classes"
     }
