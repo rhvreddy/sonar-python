@@ -1,4 +1,3 @@
-import contextlib
 import os
 import sys
 import subprocess
@@ -59,20 +58,6 @@ def read_file(file_name):
     with open(file_name, 'rb') as file:
         return file.read()
 
-def compute_checksum(file_names, get_file_bytes):
-    _hash = hashlib.sha256()
-    for fn in file_names:
-        with contextlib.suppress(OSError):
-            _hash.update(get_file_bytes(fn))
-    return _hash.hexdigest()
-
-def read_previous_checksum(checksum_file):
-    if not os.path.isfile(checksum_file):
-        return None, None
-    with open(checksum_file, 'r') as file:
-        source_checksum = file.readline().strip() or None
-        binaries_checksum = file.readline().strip() or None
-        return source_checksum, binaries_checksum
 
 def update_checksum():
     with open(CHECKSUM_FILE, 'w') as file:
