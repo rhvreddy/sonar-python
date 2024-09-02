@@ -5,6 +5,7 @@ import hashlib
 import logging
 import argparse
 
+
 # Define the path variables using os.path
 CURRENT_PATH = os.path.dirname(__file__)
 CHECKSUM_FILE = os.path.join(CURRENT_PATH, '../checksum')
@@ -13,7 +14,7 @@ RESOURCES_FOLDER_PATH = os.path.join(CURRENT_PATH, '../resources')
 BINARY_FOLDER_PATH = os.path.join(CURRENT_PATH, '../../src/main/resources/org/sonar/python/types')
 PROTOBUF_EXTENSION = '.protobuf'
 PYTHON_STUB_EXTENSION = '.pyi'
-
+golabl compute_checksum
 logger = logging.getLogger('tox_runner')
 handler = logging.StreamHandler(sys.stdout)
 log_formatter = logging.Formatter(fmt='%(name)s [%(levelname)s] --- %(message)s ---')
