@@ -5,7 +5,7 @@ node {
 
   stage('Clean Workspace') {
     try {
-      sh 'rm -rf /var/lib/jenkins/workspace/test-python/target/'
+      sh '/usr/local/apache-maven/bin/mvn clean'
     } catch (Exception e) {
       echo "Failed to clean workspace: ${e.message}"
       currentBuild.result = 'UNSTABLE'
@@ -25,7 +25,7 @@ node {
 
   stage('Build') {
     try {
-      sh '/usr/local/apache-maven/bin/mvn clean compile'
+      sh '/usr/local/apache-maven/bin/mvn compile'
     } catch (Exception e) {
       echo "Build failed: ${e.message}"
       currentBuild.result = 'FAILURE'
