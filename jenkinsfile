@@ -3,13 +3,9 @@ node {
     checkout scm
   }
 
-  stage('Verify Source Files') {
-    sh 'ls -la src/main/java'
-  }
-
   stage('Clean Workspace') {
     try {
-      sh '/usr/local/apache-maven/bin/mvn clean'
+      sh 'rm -rf /var/lib/jenkins/workspace/test-python/target/'
     } catch (Exception e) {
       echo "Failed to clean workspace: ${e.message}"
       currentBuild.result = 'UNSTABLE'
@@ -29,16 +25,12 @@ node {
 
   stage('Build') {
     try {
-      sh '/usr/local/apache-maven/bin/mvn compile'
+      sh '/usr/local/apache-maven/bin/mvn clean compile'
     } catch (Exception e) {
       echo "Build failed: ${e.message}"
       currentBuild.result = 'FAILURE'
       throw e
     }
-  }
-
-  stage('Verify Build Output') {
-    sh 'ls -la target/classes'
   }
 
   stage('SonarQube Analysis') {
