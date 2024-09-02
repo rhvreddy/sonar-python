@@ -27,7 +27,8 @@ def fetch_python_file_names(folder_path):
     return [str(file) for file in folder_path.glob('*.py')]
 
 def fetch_resource_file_names(folder_name, file_extension):
-    return [str(file) for file in folder_name.rglob(f'*{file_extension}')]
+    pattern = '*{}'.format(file_extension)
+    return [str(file) for file in folder_name.rglob(pattern)]
 
 def fetch_config_file_names():
     return ['requirements.txt', 'tox.ini']
@@ -69,15 +70,15 @@ def update_checksum():
         source_checksum = compute_checksum(source_file_names, normalize_text_files)
         binary_file_names = fetch_binary_file_names()
         binary_checksum = compute_checksum(binary_file_names, read_file)
-        file.write(f"{source_checksum}\n{binary_checksum}")
+        file.write('{}\n{}'.format(source_checksum, binary_checksum))
 
 def __log_process_begins(is_for_binary, over_n_files, previous_checksum, current_checksum):
     file_type = "BINARY" if is_for_binary else "SOURCE"
     binaries = "binaries " if is_for_binary else ""
-    logger.info(f"STARTING TYPESHED {file_type} FILE CHECKSUM COMPUTATION")
-    logger.info(f"Previous {binaries}checksum: {previous_checksum}")
-    logger.info(f"Current {binaries}checksum: {current_checksum}")
-    logger.info(f"Checksum is computed over {over_n_files} files")
+    logger.info("STARTING TYPESHED {} FILE CHECKSUM COMPUTATION".format(file_type))
+    logger.info("Previous {}checksum: {}".format(binaries, previous_checksum))
+    logger.info("Current {}checksum: {}".format(binaries, current_checksum))
+    logger.info("Checksum is computed over {} files".format(over_n_files))
 
 def main(skip_tests=False, fail_fast=False):
     source_files = fetch_source_file_names(SERIALIZER_PATH)
@@ -92,7 +93,7 @@ def main(skip_tests=False, fail_fast=False):
             try:
                 subprocess.run(['python', '-m', 'tox'], check=True)
             except subprocess.CalledProcessError as e:
-                logger.error(f"Subprocess failed with return code {e.returncode}")
+                logger.error("Subprocess failed with return code {}".format(e.returncode))
                 raise
     else:
         binary_file_names = fetch_binary_file_names()
@@ -107,7 +108,7 @@ def main(skip_tests=False, fail_fast=False):
         try:
             subprocess.run(['python', '-m', 'tox', '-e', 'py39'], check=True)
         except subprocess.CalledProcessError as e:
-            logger.error(f"Subprocess failed with return code {e.returncode}")
+            logger.error("Subprocess failed with return code {}".format(e.returncode))
             raise
 
 if __name__ == '__main__':
