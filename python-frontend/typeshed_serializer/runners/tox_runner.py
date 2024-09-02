@@ -1,23 +1,3 @@
-#
-# SonarQube Python Plugin
-# Copyright (C) 2011-2024 SonarSource SA
-# mailto:info AT sonarsource DOT com
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Lesser General Public
-# License as published by the Free Software Foundation; either
-# version 3 of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-#
-
 import contextlib
 import os
 import sys
@@ -30,11 +10,11 @@ from collections.abc import Callable
 import logging
 import argparse
 
-CURRENT_PATH = os.path.dirname(__file__)
-CHECKSUM_FILE = os.path.join(CURRENT_PATH, '../checksum')
-SERIALIZER_PATH = os.path.join(CURRENT_PATH, '../serializer')
-RESOURCES_FOLDER_PATH = os.path.join(CURRENT_PATH, '../resources')
-BINARY_FOLDER_PATH = os.path.join(CURRENT_PATH, '../../src/main/resources/org/sonar/python/types')
+CURRENT_PATH = Path(__file__).parent
+CHECKSUM_FILE = CURRENT_PATH / '../checksum'
+SERIALIZER_PATH = CURRENT_PATH / '../serializer'
+RESOURCES_FOLDER_PATH = CURRENT_PATH / '../resources'
+BINARY_FOLDER_PATH = CURRENT_PATH / '../../src/main/resources/org/sonar/python/types'
 PROTOBUF_EXTENSION = '.protobuf'
 PYTHON_STUB_EXTENSION = '.pyi'
 
@@ -45,47 +25,30 @@ logger.setLevel(logging.INFO)
 handler.setFormatter(log_formatter)
 logger.addHandler(handler)
 
+def fetch_python_file_names(folder_path: Path) -> list[str]:
+    return [str(file) for file in folder_path.glob('*.py')]
 
-def fetch_python_file_names(folder_path: str) -> list[str]:
-    result = list()
-    for file in os.listdir(folder_path):
-        if isfile(join(folder_path, file)) and file.endswith('.py'):
-            result.append(join(folder_path, file))
-    return result
-
-
-def fetch_resource_file_names(folder_name: str, file_extension: str) -> list[str]:
-    result = list()
-    for root, _, files in os.walk(folder_name):
-        for file in files:
-            if file.endswith(file_extension):
-                result.append(join(root, file))
-    return result
-
+def fetch_resource_file_names(folder_name: Path, file_extension: str) -> list[str]:
+    return [str(file) for file in folder_name.rglob(f'*{file_extension}')]
 
 def fetch_config_file_names() -> list[str]:
     return ['requirements.txt', 'tox.ini']
 
-
 def fetch_binary_file_names() -> list[str]:
     return sorted(fetch_resource_file_names(BINARY_FOLDER_PATH, PROTOBUF_EXTENSION))
 
-
-def fetch_source_file_names(folder_path: str) -> list[str]:
+def fetch_source_file_names(folder_path: Path) -> list[str]:
     filenames = fetch_python_file_names(folder_path)
     resources = fetch_resource_file_names(RESOURCES_FOLDER_PATH, PYTHON_STUB_EXTENSION)
     config_files = fetch_config_file_names()
-    return sorted([*filenames, *resources, *config_files])
-
+    return sorted(filenames + resources + config_files)
 
 def normalize_text_files(file_name: str) -> bytes:
     normalized_file = Path(file_name).read_text().strip().replace('\r\n', '\n').replace('\r', '\n')
     return bytes(normalized_file, 'utf-8')
 
-
 def read_file(file_name: str) -> bytes:
     return Path(file_name).read_bytes()
-
 
 def compute_checksum(file_names: list[str], get_file_bytes: Callable[[str], bytes]) -> str:
     _hash = hashlib.sha256()
@@ -94,52 +57,45 @@ def compute_checksum(file_names: list[str], get_file_bytes: Callable[[str], byte
             _hash.update(get_file_bytes(fn))
     return _hash.hexdigest()
 
-
-def read_previous_checksum(checksum_file: str) -> Tuple[Optional[str], Optional[str]]:
-    def empty_str_to_none(s: str) -> Optional[str]:
-        if not s:
-            return None
-        return s
-
-    if not Path(checksum_file).is_file():
+def read_previous_checksum(checksum_file: Path) -> Tuple[Optional[str], Optional[str]]:
+    if not checksum_file.is_file():
         return None, None
-    with open(checksum_file, 'r') as file:
-        source_checksum = empty_str_to_none(file.readline().strip())
-        binaries_checksum = empty_str_to_none(file.readline().strip())
+    with checksum_file.open('r') as file:
+        source_checksum = file.readline().strip() or None
+        binaries_checksum = file.readline().strip() or None
         return source_checksum, binaries_checksum
 
-
 def update_checksum():
-    with open(CHECKSUM_FILE, 'w') as file:
+    with CHECKSUM_FILE.open('w') as file:
         source_file_names = fetch_source_file_names(SERIALIZER_PATH)
         source_checksum = compute_checksum(source_file_names, normalize_text_files)
         binary_file_names = fetch_binary_file_names()
         binary_checksum = compute_checksum(binary_file_names, read_file)
-        file.writelines([f"{source_checksum}\n", binary_checksum])
+        file.write(f"{source_checksum}\n{binary_checksum}")
 
-def __log_process_begins(is_for_binary:bool, over_n_files:int, previous_checksum: Union[str, None], current_checksum:str) -> None:
-    file_type = "SOURCE"
-    binaries = ""
-    if is_for_binary:
-        file_type = "BINARY"
-        binaries = "binaries "
+def __log_process_begins(is_for_binary: bool, over_n_files: int, previous_checksum: Union[str, None], current_checksum: str) -> None:
+    file_type = "BINARY" if is_for_binary else "SOURCE"
+    binaries = "binaries " if is_for_binary else ""
     logger.info(f"STARTING TYPESHED {file_type} FILE CHECKSUM COMPUTATION")
-    logger.info(f"Previous {binaries}checksum {previous_checksum}")
-    logger.info(f"Current {binaries}checksum {current_checksum}")
+    logger.info(f"Previous {binaries}checksum: {previous_checksum}")
+    logger.info(f"Current {binaries}checksum: {current_checksum}")
     logger.info(f"Checksum is computed over {over_n_files} files")
-
 
 def main(skip_tests=False, fail_fast=False):
     source_files = fetch_source_file_names(SERIALIZER_PATH)
     current_sources_checksum = compute_checksum(source_files, normalize_text_files)
-    (previous_sources_checksum, previous_binaries_checksum) = read_previous_checksum(CHECKSUM_FILE)
+    previous_sources_checksum, previous_binaries_checksum = read_previous_checksum(CHECKSUM_FILE)
     __log_process_begins(False, len(source_files), previous_sources_checksum, current_sources_checksum)
     if previous_sources_checksum != current_sources_checksum:
         if fail_fast:
             raise RuntimeError('INCONSISTENT SOURCES CHECKSUMS')
         else:
             logger.info("STARTING TYPESHED SERIALIZATION")
-            subprocess.run(['python', '-m', 'tox'], check=True)
+            try:
+                subprocess.run(['python', '-m', 'tox'], check=True)
+            except subprocess.CalledProcessError as e:
+                logger.error(f"Subprocess failed with return code {e.returncode}")
+                raise
     else:
         binary_file_names = fetch_binary_file_names()
         current_binaries_checksum = compute_checksum(binary_file_names, read_file)
@@ -147,19 +103,20 @@ def main(skip_tests=False, fail_fast=False):
         if previous_binaries_checksum != current_binaries_checksum:
             raise RuntimeError('INCONSISTENT BINARY CHECKSUMS')
         logger.info("SKIPPING TYPESHED SERIALIZATION")
-        # At the moment we need to run the tests in order to not break the quality gate.
-        # If the tests are skipped this could potentially result in missing coverage.
         if skip_tests:
             logger.info("SKIPPING TYPESHED SERIALIZER TESTS")
             return
-        subprocess.run(['python', '-m', 'tox', '-e', 'py39'], check=True)
-
+        try:
+            subprocess.run(['python', '-m', 'tox', '-e', 'py39'], check=True)
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Subprocess failed with return code {e.returncode}")
+            raise
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--skip_tests')
-    parser.add_argument('--fail_fast')
+    parser.add_argument('--skip_tests', type=str, default="false")
+    parser.add_argument('--fail_fast', type=str, default="false")
     args = parser.parse_args()
-    skip_tests = args.skip_tests == "true"
-    fail_fast = args.fail_fast == "true"
+    skip_tests = args.skip_tests.lower() == "true"
+    fail_fast = args.fail_fast.lower() == "true"
     main(skip_tests, fail_fast)
